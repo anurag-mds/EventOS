@@ -1,5 +1,15 @@
 // ─── Organizer View ──────────────────────────────────────────────────────────
 import { useState, useEffect, useMemo } from 'react';
+import {
+  Play,
+  Square,
+  Check,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Users,
+  ShieldCheck,
+} from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { EventStore } from '../../state/eventStore';
 import type { EventState } from '../../state/types';
@@ -12,20 +22,16 @@ import { startSimulation, stopSimulation, isSimulationRunning } from '../../simu
 export function OrganizerView() {
   const [state, setState] = useState<Readonly<EventState>>(EventStore.getState());
   const [simRunning, setSimRunning] = useState(isSimulationRunning());
-  
-  // Check-in UI state
+
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
   const [checkInMessage, setCheckInMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  
-  // Team filter state
+
   const [teamFilter, setTeamFilter] = useState('');
 
   useEffect(() => {
     const unsub = EventStore.subscribe(setState);
     return unsub;
   }, []);
-
-  // ─── Derived Metrics ────────────────────────────────────────────────────────
 
   const participants = Object.values(state.participants);
   const teams = Object.values(state.teams);
@@ -57,8 +63,6 @@ export function OrganizerView() {
 
   const openIncidents = state.incidents.filter((i) => i.status !== 'resolved');
 
-  // ─── Judge Workload ─────────────────────────────────────────────────────────
-
   const judgeWorkload = judges.map((judge) => {
     const assigned = judge.assignedSubmissionIds.length;
     const isOverloaded = assigned > judge.capacityLimit;
@@ -71,15 +75,11 @@ export function OrganizerView() {
     };
   });
 
-  // ─── Team Filtering ─────────────────────────────────────────────────────────
-
   const filteredTeams = useMemo(() => {
     if (!teamFilter.trim()) return teams;
     const query = teamFilter.toLowerCase();
     return teams.filter((team) => {
-      // Match team name
       if (team.name.toLowerCase().includes(query)) return true;
-      // Match member skills
       const memberSkills = team.memberIds
         .map((mid) => state.participants[mid]?.skills ?? [])
         .flat()
@@ -87,8 +87,6 @@ export function OrganizerView() {
       return memberSkills.some((skill) => skill.includes(query));
     });
   }, [teams, teamFilter, state.participants]);
-
-  // ─── Check-In Logic ─────────────────────────────────────────────────────────
 
   const notCheckedInParticipants = participants.filter((p) => !p.checkedIn);
 
@@ -105,10 +103,8 @@ export function OrganizerView() {
       return;
     }
 
-    // Dispatch check-in
     EventStore.dispatch({ type: 'CHECK_IN_PARTICIPANT', participantId });
 
-    // Add activity
     EventStore.dispatch({
       type: 'ADD_ACTIVITY',
       entry: {
@@ -122,14 +118,12 @@ export function OrganizerView() {
     });
 
     setCheckInMessage({
-      text: `✓ ${participant.name} checked in successfully`,
+      text: `${participant.name} checked in successfully`,
       type: 'success',
     });
     setSelectedParticipantId(null);
     setTimeout(() => setCheckInMessage(null), 3000);
   }
-
-  // ─── Simulation Toggle ──────────────────────────────────────────────────────
 
   function handleToggleSim() {
     if (simRunning) {
@@ -156,11 +150,8 @@ export function OrganizerView() {
     });
   }
 
-  // ─── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <main className="view organizer-view" aria-label="Organizer Dashboard">
-      {/* Header */}
       <header className="view__header">
         <div>
           <h1 className="view__title">Organizer Command Center</h1>
@@ -172,13 +163,22 @@ export function OrganizerView() {
           onClick={handleToggleSim}
           aria-pressed={simRunning}
         >
-          {simRunning ? '⏹ Stop Simulation' : '▶ Start Simulation'}
+          {simRunning ? (
+            <>
+              <Square className="btn__icon" aria-hidden="true" />
+              Stop Simulation
+            </>
+          ) : (
+            <>
+              <Play className="btn__icon" aria-hidden="true" />
+              Start Simulation
+            </>
+          )}
         </button>
       </header>
 
-      {/* KPI Strip */}
       <section className="kpi-strip" aria-label="Key metrics">
-        <div className={`kpi-card kpi-card--health kpi-card--${health.label}`}>
+        <div className={`kpi-card kpi-card--health`}>
           <span className="kpi-card__value">{health.score}</span>
           <span className="kpi-card__label">Event Health</span>
           <span className={`kpi-card__tag kpi-card__tag--${health.label}`}>{health.label.toUpperCase()}</span>
@@ -208,8 +208,7 @@ export function OrganizerView() {
         </div>
       </section>
 
-      {/* Check-In Section */}
-      <section className="panel" aria-labelledby="checkin-heading" style={{ marginTop: '1.5rem' }}>
+      <section className="panel panel--wide" aria-labelledby="checkin-heading">
         <h2 id="checkin-heading" className="panel__title">
           QR Check-In Scanner
           <span className="panel__badge">{notCheckedInParticipants.length} pending</span>
@@ -217,26 +216,34 @@ export function OrganizerView() {
 
         {checkInMessage && (
           <div className={`alert alert--${checkInMessage.type}`} role="alert">
+            {checkInMessage.type === 'success' ? (
+              <Check className="alert__icon" aria-hidden="true" />
+            ) : (
+              <AlertTriangle className="alert__icon" aria-hidden="true" />
+            )}
             {checkInMessage.text}
           </div>
         )}
 
         {notCheckedInParticipants.length === 0 ? (
-          <p className="panel__empty">✅ All participants checked in!</p>
+          <div className="empty-state" role="status">
+            <CheckCircle className="empty-state__icon" aria-hidden="true" />
+            <p>All participants checked in</p>
+          </div>
         ) : (
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-            {/* Participant Selector */}
-            <div style={{ flex: '1 1 300px' }}>
-              <label htmlFor="participant-select" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                Select participant to simulate scan:
+          <div className="checkin-layout">
+            <div className="checkin-layout__form">
+              <label htmlFor="participant-select" className="form-label">
+                Select participant to simulate scan
               </label>
               <select
                 id="participant-select"
+                className="form-control"
                 value={selectedParticipantId ?? ''}
                 onChange={(e) => setSelectedParticipantId(e.target.value || null)}
-                style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem', fontSize: '0.95rem' }}
+                style={{ marginBottom: 'var(--sp-4)' }}
               >
-                <option value="">-- Choose participant --</option>
+                <option value="">Choose participant</option>
                 {notCheckedInParticipants.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.email})
@@ -244,28 +251,29 @@ export function OrganizerView() {
                 ))}
               </select>
               <button
-                className="btn btn--primary"
+                className="btn btn--primary btn--block"
                 onClick={() => selectedParticipantId && handleScanCheckIn(selectedParticipantId)}
                 disabled={!selectedParticipantId}
-                style={{ width: '100%' }}
               >
-                ✓ Scan &amp; Check In
+                <Check className="btn__icon" aria-hidden="true" />
+                Scan &amp; Check In
               </button>
             </div>
 
-            {/* QR Code Display */}
             {selectedParticipantId && (
-              <div style={{ flex: '0 0 auto', textAlign: 'center', padding: '1rem', background: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <div style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              <div className="qr-pass">
+                <div className="qr-pass__label">
                   {state.participants[selectedParticipantId]?.name}'s Pass
                 </div>
-                <QRCodeSVG
-                  value={selectedParticipantId}
-                  size={160}
-                  level="M"
-                  includeMargin
-                />
-                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#666', fontFamily: 'monospace' }}>
+                <div className="qr-pass__canvas">
+                  <QRCodeSVG
+                    value={selectedParticipantId}
+                    size={160}
+                    level="M"
+                    includeMargin
+                  />
+                </div>
+                <div className="qr-pass__id">
                   ID: {selectedParticipantId}
                 </div>
               </div>
@@ -274,9 +282,7 @@ export function OrganizerView() {
         )}
       </section>
 
-      {/* Two-column layout: Teams & Judge Workload */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
-        {/* Teams with Filter */}
+      <div className="view__grid-2">
         <section className="panel" aria-labelledby="teams-heading">
           <h2 id="teams-heading" className="panel__title">
             Teams
@@ -284,27 +290,37 @@ export function OrganizerView() {
           </h2>
           <input
             type="search"
-            placeholder="Filter by team name or member skill..."
+            className="form-control"
+            placeholder="Filter by team name or member skill…"
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem', fontSize: '0.95rem', border: '1px solid #ddd', borderRadius: '4px' }}
+            style={{ marginBottom: 'var(--sp-4)' }}
             aria-label="Filter teams"
           />
           {filteredTeams.length === 0 ? (
-            <p className="panel__empty">No teams match "{teamFilter}"</p>
+            <div className="empty-state" role="status">
+              <Users className="empty-state__icon" aria-hidden="true" />
+              <p>{teamFilter ? `No teams match "${teamFilter}"` : 'No teams yet'}</p>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="panel__list">
               {filteredTeams.map((team) => (
-                <div key={team.id} style={{ padding: '0.75rem', background: '#f9f9f9', borderRadius: '6px', border: '1px solid #e5e5e5' }}>
-                  <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{team.name}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
-                    {team.memberIds.length} members · {team.tags.join(', ')}
+                <div key={team.id} className="list-card">
+                  <div className="list-card__title">{team.name}</div>
+                  <div className="list-card__meta">
+                    {team.memberIds.length} members · {team.tags.join(', ') || 'No tags'}
                   </div>
-                  <div style={{ fontSize: '0.85rem' }}>
+                  <div className={`list-card__status ${team.submissionId ? 'list-card__status--success' : 'list-card__status--pending'}`}>
                     {team.submissionId ? (
-                      <span style={{ color: '#2e7d32' }}>✓ Submitted</span>
+                      <>
+                        <Check className="list-card__status-icon" aria-hidden="true" />
+                        Submitted
+                      </>
                     ) : (
-                      <span style={{ color: '#f57c00' }}>⏳ In progress</span>
+                      <>
+                        <Clock className="list-card__status-icon" aria-hidden="true" />
+                        In progress
+                      </>
                     )}
                   </div>
                 </div>
@@ -313,7 +329,6 @@ export function OrganizerView() {
           )}
         </section>
 
-        {/* Judge Workload */}
         <section className="panel" aria-labelledby="judges-heading">
           <h2 id="judges-heading" className="panel__title">
             Judge Workload
@@ -321,18 +336,23 @@ export function OrganizerView() {
               <span className="panel__badge panel__badge--alert">{overload.overloadedJudgeIds.length} overloaded</span>
             )}
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="panel__list">
             {judgeWorkload.map((j) => (
-              <div key={j.id} style={{ padding: '0.75rem', background: j.isOverloaded ? '#fff3e0' : '#f9f9f9', borderRadius: '6px', border: `1px solid ${j.isOverloaded ? '#ff9800' : '#e5e5e5'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>{j.name}</span>
-                  <span style={{ fontSize: '0.9rem', color: j.isOverloaded ? '#e65100' : '#666' }}>
+              <div key={j.id} className={`list-card ${j.isOverloaded ? 'list-card--warning' : ''}`}>
+                <div className="list-card__header">
+                  <span className="list-card__title">{j.name}</span>
+                  <span className={`workload-count ${j.isOverloaded ? 'workload-count--over' : ''}`}>
                     {j.assigned}/{j.capacity}
-                    {j.isOverloaded && ' ⚠️'}
+                    {j.isOverloaded && (
+                      <AlertTriangle className="workload-count__icon" aria-label="Over capacity" />
+                    )}
                   </span>
                 </div>
-                <div style={{ marginTop: '0.5rem', height: '6px', background: '#e0e0e0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.min(100, (j.assigned / j.capacity) * 100)}%`, background: j.isOverloaded ? '#ff9800' : '#4caf50', transition: 'width 0.3s' }} />
+                <div className="workload-bar" role="progressbar" aria-valuenow={j.assigned} aria-valuemin={0} aria-valuemax={j.capacity} aria-label={`${j.name} workload`}>
+                  <div
+                    className={`workload-bar__fill ${j.isOverloaded ? 'workload-bar__fill--over' : 'workload-bar__fill--ok'}`}
+                    style={{ width: `${Math.min(100, (j.assigned / j.capacity) * 100)}%` }}
+                  />
                 </div>
               </div>
             ))}
@@ -340,8 +360,7 @@ export function OrganizerView() {
         </section>
       </div>
 
-      {/* Activity Feed + Incidents */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+      <div className="view__grid-2">
         <section className="panel" aria-labelledby="feed-heading">
           <h2 id="feed-heading" className="panel__title">Live Activity</h2>
           <ActivityFeed entries={state.activityFeed.slice(0, 10)} />
@@ -355,7 +374,10 @@ export function OrganizerView() {
             )}
           </h2>
           {openIncidents.length === 0 ? (
-            <p className="panel__empty">✅ No active incidents</p>
+            <div className="empty-state" role="status">
+              <ShieldCheck className="empty-state__icon" aria-hidden="true" />
+              <p>No active incidents</p>
+            </div>
           ) : (
             <div className="panel__list">
               {openIncidents.map((inc) => (

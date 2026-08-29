@@ -1,4 +1,14 @@
 // ─── ActivityFeed Component ──────────────────────────────────────────────────
+import {
+  Package,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  Trophy,
+  Megaphone,
+  UserCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ActivityEntry, ActivityKind } from '../state/types';
 
 interface ActivityFeedProps {
@@ -6,14 +16,14 @@ interface ActivityFeedProps {
   maxItems?: number;
 }
 
-const KIND_ICON: Record<ActivityKind, string> = {
-  submission:        '📦',
-  team_join:         '👥',
-  incident_opened:   '🚨',
-  incident_resolved: '✅',
-  score_posted:      '🏅',
-  announcement:      '📢',
-  check_in:          '✔️',
+const KIND_ICON: Record<ActivityKind, LucideIcon> = {
+  submission:        Package,
+  team_join:         Users,
+  incident_opened:   AlertTriangle,
+  incident_resolved: CheckCircle,
+  score_posted:      Trophy,
+  announcement:      Megaphone,
+  check_in:          UserCheck,
 };
 
 function timeAgo(ts: number): string {
@@ -26,24 +36,31 @@ function timeAgo(ts: number): string {
 export function ActivityFeed({ entries, maxItems = 50 }: ActivityFeedProps) {
   const visible = entries.slice(0, maxItems);
 
+  if (visible.length === 0) {
+    return (
+      <div className="empty-state" role="status">
+        <Megaphone className="empty-state__icon" aria-hidden="true" />
+        <p>No activity yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="activity-feed" role="log" aria-label="Live activity feed" aria-live="polite">
-      {visible.length === 0 && (
-        <p className="activity-feed__empty">No activity yet.</p>
-      )}
-      {visible.map((entry) => (
-        <div key={entry.id} className={`activity-feed__item activity-feed__item--${entry.kind}`}>
-          <span className="activity-feed__icon" aria-hidden="true">
-            {KIND_ICON[entry.kind]}
-          </span>
-          <div className="activity-feed__body">
-            <span className="activity-feed__message">{entry.message}</span>
-            <span className="activity-feed__meta">
-              {entry.actorName} · <time dateTime={new Date(entry.timestamp).toISOString()}>{timeAgo(entry.timestamp)}</time>
-            </span>
+      {visible.map((entry) => {
+        const Icon = KIND_ICON[entry.kind];
+        return (
+          <div key={entry.id} className={`activity-feed__item activity-feed__item--${entry.kind}`}>
+            <Icon className="activity-feed__icon" aria-hidden="true" />
+            <div className="activity-feed__body">
+              <span className="activity-feed__message">{entry.message}</span>
+              <span className="activity-feed__meta">
+                {entry.actorName} · <time dateTime={new Date(entry.timestamp).toISOString()}>{timeAgo(entry.timestamp)}</time>
+              </span>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

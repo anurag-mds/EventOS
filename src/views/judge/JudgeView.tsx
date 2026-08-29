@@ -1,11 +1,11 @@
 // ─── Judge View ───────────────────────────────────────────────────────────────
 import { useState, useEffect } from 'react';
+import { AlertTriangle, FolderOpen, ExternalLink, CheckCircle, ClipboardList } from 'lucide-react';
 import { EventStore } from '../../state/eventStore';
 import type { EventState, Submission } from '../../state/types';
 import { judgeOverload } from '../../intelligence/judgeOverload';
 import { ActivityFeed } from '../../components/ActivityFeed';
 
-// Demo: show view from Dr. Vaidya's perspective (judge j-01)
 const MY_JUDGE_ID = 'j-01';
 
 export function JudgeView() {
@@ -58,13 +58,13 @@ export function JudgeView() {
         </div>
         {amOverloaded && (
           <div className="overload-banner" role="alert" aria-live="assertive">
-            ⚠️ You are over capacity — {overload.overloadBy[MY_JUDGE_ID]} extra submissions assigned
+            <AlertTriangle className="overload-banner__icon" aria-hidden="true" />
+            Over capacity — {overload.overloadBy[MY_JUDGE_ID]} extra submissions assigned
           </div>
         )}
       </header>
 
       <div className="view__body">
-        {/* Submission queue */}
         <section className="panel panel--wide" aria-labelledby="queue-heading">
           <h2 id="queue-heading" className="panel__title">
             My Submission Queue
@@ -72,7 +72,10 @@ export function JudgeView() {
           </h2>
 
           {mySubmissions.length === 0 && (
-            <p className="panel__empty">No submissions assigned yet.</p>
+            <div className="empty-state" role="status">
+              <ClipboardList className="empty-state__icon" aria-hidden="true" />
+              <p>No submissions assigned yet.</p>
+            </div>
           )}
 
           {mySubmissions.map((sub) => {
@@ -94,17 +97,19 @@ export function JudgeView() {
 
                 <div className="submission-card__links">
                   <a href={sub.repoUrl} target="_blank" rel="noopener noreferrer" className="link">
-                    📁 Repository
+                    <FolderOpen className="link__icon" aria-hidden="true" />
+                    Repository
                   </a>
                   <a href={sub.demoUrl} target="_blank" rel="noopener noreferrer" className="link">
-                    🚀 Demo
+                    <ExternalLink className="link__icon" aria-hidden="true" />
+                    Demo
                   </a>
                 </div>
 
                 <div className="submission-card__scoring">
                   {alreadyScored ? (
                     <div className="scoring-done" aria-label={`You scored ${myScore}/100`}>
-                      <span className="scoring-done__icon">✅</span>
+                      <CheckCircle className="scoring-done__icon" aria-hidden="true" />
                       <span>Your score: <strong>{myScore}/100</strong></span>
                     </div>
                   ) : (
@@ -140,7 +145,6 @@ export function JudgeView() {
           })}
         </section>
 
-        {/* My expertise */}
         <section className="panel" aria-labelledby="expertise-heading">
           <h2 id="expertise-heading" className="panel__title">My Expertise</h2>
           <div className="tag-list">
@@ -150,7 +154,6 @@ export function JudgeView() {
           </div>
         </section>
 
-        {/* Feed */}
         <section className="panel" aria-labelledby="jfeed-heading">
           <h2 id="jfeed-heading" className="panel__title">Score Events</h2>
           <ActivityFeed

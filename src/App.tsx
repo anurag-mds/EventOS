@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { Target, Laptop, Scale, type LucideIcon } from 'lucide-react';
 import './App.css';
 import type { Role } from './state/types';
 import { OrganizerView } from './views/organizer/OrganizerView';
 import { ParticipantView } from './views/participant/ParticipantView';
 import { JudgeView } from './views/judge/JudgeView';
 
-const ROLES: { id: Role; label: string; emoji: string }[] = [
-  { id: 'organizer',   label: 'Organizer',   emoji: '🎯' },
-  { id: 'participant', label: 'Participant',  emoji: '💻' },
-  { id: 'judge',       label: 'Judge',        emoji: '⚖️' },
+const ROLES: { id: Role; label: string; icon: LucideIcon }[] = [
+  { id: 'organizer',   label: 'Organizer',   icon: Target },
+  { id: 'participant', label: 'Participant', icon: Laptop },
+  { id: 'judge',       label: 'Judge',       icon: Scale },
 ];
 
 function App() {
@@ -16,7 +17,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* ── Top Navigation ── */}
       <nav className="top-nav" role="navigation" aria-label="EVENTOS navigation">
         <a href="/" className="top-nav__brand" aria-label="EVENTOS home">
           <div className="top-nav__logo" aria-hidden="true">E</div>
@@ -28,7 +28,7 @@ function App() {
           role="tablist"
           aria-label="Switch role view"
         >
-          {ROLES.map(({ id, label, emoji }) => (
+          {ROLES.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               id={`role-btn-${id}`}
@@ -38,13 +38,13 @@ function App() {
               className={`role-btn ${role === id ? 'role-btn--active' : ''}`}
               onClick={() => setRole(id)}
             >
-              <span aria-hidden="true">{emoji}</span> {label}
+              <Icon className="role-btn__icon" aria-hidden="true" />
+              {label}
             </button>
           ))}
         </div>
       </nav>
 
-      {/* ── Active View ── */}
       <div
         id={`view-${role}`}
         role="tabpanel"
