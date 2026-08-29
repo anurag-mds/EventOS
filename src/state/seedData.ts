@@ -64,6 +64,16 @@ export const seedParticipants: Record<string, Participant> = {
   'p-28': { id: 'p-28', name: 'Om Chaudhari',   email: 'om@somaiya.edu',     teamId: 't-08', checkedIn: true,  skills: ['Next.js', 'tRPC', 'Prisma'] },
   'p-29': { id: 'p-29', name: 'Riddhi Jain',    email: 'riddhi@somaiya.edu', teamId: 't-08', checkedIn: true,  skills: ['Cloud Spanner', 'AlloyDB', 'SQL'] },
   'p-30': { id: 'p-30', name: 'Farhan Sheikh',  email: 'farhan@somaiya.edu', teamId: 't-08', checkedIn: true,  skills: ['Security', 'OAuth2', 'Zero Trust'] },
+  'p-31': { id: 'p-31', name: 'Lakshmi Iyer',   email: 'lakshmi@sp.edu.in',  teamId: 't-09', checkedIn: true,  skills: ['Angular', 'RxJS', 'NestJS'] },
+  'p-32': { id: 'p-32', name: 'Arjun Bose',     email: 'arjun@sp.edu.in',    teamId: 't-09', checkedIn: false, skills: ['Backend', 'Microservices', 'gRPC'] },
+  'p-33': { id: 'p-33', name: 'Swati Chopra',   email: 'swati@sp.edu.in',    teamId: 't-09', checkedIn: true,  skills: ['Elasticsearch', 'Kibana', 'Grafana'] },
+  'p-34': { id: 'p-34', name: 'Kabir Sinha',    email: 'kabir@sp.edu.in',    teamId: 't-10', checkedIn: true,  skills: ['Unity', 'C#', 'ARCore'] },
+  'p-35': { id: 'p-35', name: 'Maya Patel',     email: 'maya@sp.edu.in',     teamId: 't-10', checkedIn: true,  skills: ['Game Design', '3D Modeling', 'Blender'] },
+  'p-36': { id: 'p-36', name: 'Vivek Gupta',    email: 'vivek@bvp.edu.in',   teamId: 't-11', checkedIn: true,  skills: ['Blockchain', 'Smart Contracts', 'Solana'] },
+  'p-37': { id: 'p-37', name: 'Nisha Agarwal',  email: 'nisha@bvp.edu.in',   teamId: 't-11', checkedIn: false, skills: ['Tokenomics', 'Crypto', 'DeFi'] },
+  'p-38': { id: 'p-38', name: 'Rajat Mehta',    email: 'rajat@bvp.edu.in',   teamId: 't-11', checkedIn: true,  skills: ['Web3', 'IPFS', 'NFT'] },
+  'p-39': { id: 'p-39', name: 'Tina Das',       email: 'tina@sies.edu.in',   teamId: 't-12', checkedIn: true,  skills: ['Quantum', 'Qiskit', 'Python'] },
+  'p-40': { id: 'p-40', name: 'Rohit Khanna',   email: 'rohit@sies.edu.in',  teamId: 't-12', checkedIn: true,  skills: ['Physics', 'Math', 'Research'] },
 };
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
@@ -73,10 +83,14 @@ export const seedTeams: Record<string, Team> = {
   't-02': { id: 't-02', name: 'ByteBlitz',       memberIds: ['p-05','p-06','p-07','p-08'], projectTitle: 'CrowdSense',          projectDescription: 'ML-based crowd flow optimization using Vertex AI',           tags: ['ML','Vertex AI','Maps'],  submissionId: 'sub-02' },
   't-03': { id: 't-03', name: 'CloudCrafters',   memberIds: ['p-09','p-10','p-11','p-12'], projectTitle: 'SpotLight',           projectDescription: 'NLP-driven sponsor-participant matching engine',               tags: ['NLP','Firebase','GKE'],   submissionId: 'sub-03' },
   't-04': { id: 't-04', name: 'PixelPioneers',   memberIds: ['p-13','p-14','p-15','p-16'], projectTitle: 'JudgeAssist',         projectDescription: 'AutoML submission scoring assistant for judges',              tags: ['AutoML','Flutter','ML'],  submissionId: 'sub-04' },
-  't-05': { id: 't-05', name: 'SynapticSquad',   memberIds: ['p-17','p-18','p-19','p-20'], projectTitle: 'HackaChain',          projectDescription: 'Blockchain-anchored submission audit trail',                  tags: ['Web3','Vue','Cloud Run'], submissionId: null },
-  't-06': { id: 't-06', name: 'KernelKrew',      memberIds: ['p-21','p-22','p-23'],        projectTitle: 'SecureHack',          projectDescription: 'Zero-trust DevSecOps pipeline for hackathon infra',           tags: ['Security','K8s','DevOps'],submissionId: null },
-  't-07': { id: 't-07', name: 'DataDrifters',    memberIds: ['p-24','p-25','p-26','p-27'], projectTitle: 'InsightBoard',        projectDescription: 'Real-time analytics dashboard powered by Looker + BigQuery',  tags: ['Data','Looker','IoT'],    submissionId: null },
-  't-08': { id: 't-08', name: 'AlphaBuilders',   memberIds: ['p-28','p-29','p-30'],        projectTitle: 'VaultDB',             projectDescription: 'Encrypted multi-tenant Spanner schema with AlloyDB failover', tags: ['Security','SQL','Next.js'],submissionId: null },
+  't-05': { id: 't-05', name: 'SynapticSquad',   memberIds: ['p-17','p-18','p-19','p-20'], projectTitle: 'HackaChain',          projectDescription: 'Blockchain-anchored submission audit trail',                  tags: ['Web3','Vue','Cloud Run'], submissionId: 'sub-05' },
+  't-06': { id: 't-06', name: 'KernelKrew',      memberIds: ['p-21','p-22','p-23'],        projectTitle: 'SecureHack',          projectDescription: 'Zero-trust DevSecOps pipeline for hackathon infra',           tags: ['Security','K8s','DevOps'],submissionId: 'sub-06' },
+  't-07': { id: 't-07', name: 'DataDrifters',    memberIds: ['p-24','p-25','p-26','p-27'], projectTitle: 'InsightBoard',        projectDescription: 'Real-time analytics dashboard powered by Looker + BigQuery',  tags: ['Data','Looker','IoT'],    submissionId: 'sub-07' },
+  't-08': { id: 't-08', name: 'AlphaBuilders',   memberIds: ['p-28','p-29','p-30'],        projectTitle: 'VaultDB',             projectDescription: 'Encrypted multi-tenant Spanner schema with AlloyDB failover', tags: ['Security','SQL','Next.js'],submissionId: 'sub-08' },
+  't-09': { id: 't-09', name: 'CodeCatalysts',   memberIds: ['p-31','p-32','p-33'],        projectTitle: 'LogLens',             projectDescription: 'Distributed tracing & log aggregation with Elasticsearch',    tags: ['DevOps','Backend','Observability'], submissionId: null },
+  't-10': { id: 't-10', name: 'MetaMinds',       memberIds: ['p-34','p-35'],               projectTitle: 'ARena',               projectDescription: 'AR-powered venue navigation using ARCore',                    tags: ['AR','Unity','Mobile'],    submissionId: null },
+  't-11': { id: 't-11', name: 'ChainChangers',   memberIds: ['p-36','p-37','p-38'],        projectTitle: 'DAppDao',             projectDescription: 'Decentralized governance platform for hackathon voting',      tags: ['Blockchain','DeFi','Web3'], submissionId: null },
+  't-12': { id: 't-12', name: 'QuantumQuest',    memberIds: ['p-39','p-40'],               projectTitle: 'QuantSim',            projectDescription: 'Quantum algorithm simulator for optimization problems',       tags: ['Quantum','Research','Python'], submissionId: null },
 };
 
 // ─── Judges ───────────────────────────────────────────────────────────────────
@@ -91,13 +105,31 @@ export const seedJudges: Record<string, Judge> = {
   'j-02': {
     id: 'j-02', name: 'Ms. Shraddha Kulkarni',
     expertise: ['Cloud Architecture', 'GCP', 'Security', 'DevOps'],
-    assignedSubmissionIds: ['sub-01', 'sub-04'],
+    assignedSubmissionIds: ['sub-01', 'sub-04', 'sub-06'],
     capacityLimit: 3,
   },
   'j-03': {
     id: 'j-03', name: 'Mr. Rohan Kapoor',
     expertise: ['Product', 'UX', 'Business Impact', 'Pitch'],
     assignedSubmissionIds: ['sub-02', 'sub-03', 'sub-04'],
+    capacityLimit: 3,
+  },
+  'j-04': {
+    id: 'j-04', name: 'Dr. Anita Deshmukh',
+    expertise: ['Data Science', 'BigQuery', 'Analytics', 'Looker'],
+    assignedSubmissionIds: ['sub-05', 'sub-07'],
+    capacityLimit: 3,
+  },
+  'j-05': {
+    id: 'j-05', name: 'Mr. Sameer Patil',
+    expertise: ['Web3', 'Blockchain', 'Smart Contracts', 'DeFi'],
+    assignedSubmissionIds: ['sub-05', 'sub-08'],
+    capacityLimit: 3,
+  },
+  'j-06': {
+    id: 'j-06', name: 'Ms. Kavita Rao',
+    expertise: ['Frontend', 'React', 'TypeScript', 'Performance'],
+    assignedSubmissionIds: ['sub-06', 'sub-07', 'sub-08'],
     capacityLimit: 3,
   },
 };
@@ -144,6 +176,46 @@ export const seedSubmissions: Record<string, Submission> = {
     status: 'under_review',
     scores: { 'j-02': 95, 'j-03': 91 },
     submittedAt: NOW - 20 * 60_000,
+  },
+  'sub-05': {
+    id: 'sub-05', teamId: 't-05',
+    title: 'HackaChain',
+    description: 'Blockchain-anchored submission audit trail',
+    repoUrl: 'https://github.com/synaptic/hackachain',
+    demoUrl: 'https://hackachain.vercel.app',
+    status: 'under_review',
+    scores: { 'j-04': 82, 'j-05': 89 },
+    submittedAt: NOW - 35 * 60_000,
+  },
+  'sub-06': {
+    id: 'sub-06', teamId: 't-06',
+    title: 'SecureHack',
+    description: 'Zero-trust DevSecOps pipeline for hackathon infra',
+    repoUrl: 'https://github.com/kernelkrew/securehack',
+    demoUrl: 'https://securehack.run.app',
+    status: 'under_review',
+    scores: { 'j-02': 91, 'j-06': 87 },
+    submittedAt: NOW - 25 * 60_000,
+  },
+  'sub-07': {
+    id: 'sub-07', teamId: 't-07',
+    title: 'InsightBoard',
+    description: 'Real-time analytics dashboard powered by Looker + BigQuery',
+    repoUrl: 'https://github.com/datadrifters/insightboard',
+    demoUrl: 'https://insightboard.web.app',
+    status: 'under_review',
+    scores: { 'j-04': 86, 'j-06': 84 },
+    submittedAt: NOW - 40 * 60_000,
+  },
+  'sub-08': {
+    id: 'sub-08', teamId: 't-08',
+    title: 'VaultDB',
+    description: 'Encrypted multi-tenant Spanner schema with AlloyDB failover',
+    repoUrl: 'https://github.com/alphabuilders/vaultdb',
+    demoUrl: 'https://vaultdb-demo.run.app',
+    status: 'under_review',
+    scores: { 'j-05': 90, 'j-06': 88 },
+    submittedAt: NOW - 50 * 60_000,
   },
 };
 
@@ -201,9 +273,13 @@ export const seedActivity: ActivityEntry[] = [
 
 export const seedLeaderboard: LeaderboardEntry[] = [
   { rank: 1, teamId: 't-04', teamName: 'PixelPioneers', averageScore: 93.0, submissionId: 'sub-04', judgesScored: 2 },
-  { rank: 2, teamId: 't-02', teamName: 'ByteBlitz',     averageScore: 88.5, submissionId: 'sub-02', judgesScored: 2 },
-  { rank: 3, teamId: 't-03', teamName: 'CloudCrafters', averageScore: 79.5, submissionId: 'sub-03', judgesScored: 2 },
-  { rank: 4, teamId: 't-01', teamName: 'NeuralNomads',  averageScore: 88.0, submissionId: 'sub-01', judgesScored: 1 },
+  { rank: 2, teamId: 't-06', teamName: 'KernelKrew',    averageScore: 89.0, submissionId: 'sub-06', judgesScored: 2 },
+  { rank: 3, teamId: 't-08', teamName: 'AlphaBuilders', averageScore: 89.0, submissionId: 'sub-08', judgesScored: 2 },
+  { rank: 4, teamId: 't-02', teamName: 'ByteBlitz',     averageScore: 88.5, submissionId: 'sub-02', judgesScored: 2 },
+  { rank: 5, teamId: 't-01', teamName: 'NeuralNomads',  averageScore: 88.0, submissionId: 'sub-01', judgesScored: 1 },
+  { rank: 6, teamId: 't-05', teamName: 'SynapticSquad', averageScore: 85.5, submissionId: 'sub-05', judgesScored: 2 },
+  { rank: 7, teamId: 't-07', teamName: 'DataDrifters',  averageScore: 85.0, submissionId: 'sub-07', judgesScored: 2 },
+  { rank: 8, teamId: 't-03', teamName: 'CloudCrafters', averageScore: 79.5, submissionId: 'sub-03', judgesScored: 2 },
 ];
 
 // ─── Derived helpers ─────────────────────────────────────────────────────────
