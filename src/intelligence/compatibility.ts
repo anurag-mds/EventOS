@@ -192,3 +192,35 @@ export function findTopMatches(
 
   return results.slice(0, topN);
 }
+
+/**
+ * Computes team-level member compatibility by averaging all pairwise scores.
+ * Returns 0 if team has fewer than 2 members.
+ * 
+ * @param team - The team to evaluate
+ * @param participants - All participants to resolve member data
+ * @returns Score 0–100 representing average inter-member compatibility
+ */
+export function teamMemberCompatibility(
+  team: Team,
+  participants: Record<string, Participant>
+): number {
+  const members = team.memberIds
+    .map((id) => participants[id])
+    .filter((p): p is Participant => p !== undefined);
+
+  if (members.length < 2) return 0;
+
+  // Compute all pairwise compatibilities
+  const scores: number[] = [];
+  for (let i = 0; i < members.length; i++) {
+    for (let j = i + 1; j < members.length; j++) {
+      const result = computeCompatibility(members[i], members[j]);
+      scores.push(result.score);
+    }
+  }
+
+  // Return average
+  const avg = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+  return Math.round(avg);
+}

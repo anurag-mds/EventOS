@@ -4,7 +4,7 @@ import { EventStore } from '../../state/eventStore';
 import type { EventState } from '../../state/types';
 import { Leaderboard } from '../../components/Leaderboard';
 import { ActivityFeed } from '../../components/ActivityFeed';
-import { teamProjectCompatibility, findTopMatches } from '../../intelligence/compatibility';
+import { teamMemberCompatibility, findTopMatches } from '../../intelligence/compatibility';
 
 // Demo: show the view from Aryan Mehta's perspective (p-01, team t-01)
 // You can change this to any participant ID to test different scenarios
@@ -12,7 +12,6 @@ const MY_PARTICIPANT_ID = 'p-01';
 
 export function ParticipantView() {
   const [state, setState] = useState<Readonly<EventState>>(EventStore.getState());
-  const [selectedTeammates, setSelectedTeammates] = useState<string[]>([]);
   const [teamFormError, setTeamFormError] = useState<string | null>(null);
   const [teamFormSuccess, setTeamFormSuccess] = useState<string | null>(null);
 
@@ -26,9 +25,10 @@ export function ParticipantView() {
   const mySubmissionId = myTeam?.submissionId ?? null;
   const mySubmission = mySubmissionId ? state.submissions[mySubmissionId] : null;
 
-  const compatibility = myTeam
-    ? teamProjectCompatibility({ team: myTeam, participants: state.participants })
-    : null;
+  // Use teamMemberCompatibility (pairwise average) instead of teamProjectCompatibility (tags)
+  const compatibilityScore = myTeam
+    ? teamMemberCompatibility(myTeam, state.participants)
+    : 0;
 
   const timeLeft = Math.max(0, state.event.endTime - Date.now());
   const minutesLeft = Math.floor(timeLeft / 60_000);
@@ -37,43 +37,30 @@ export function ParticipantView() {
   // ─── Matchmaking ─────────────────────────────────────────────────────────────
   const topMatches = me && !myTeam ? findTopMatches(me, state.participants, 5) : [];
 
-  function handleToggleTeammate(participantId: string) {
-    setSelectedTeammates((prev) =>
-      prev.includes(participantId)
-        ? prev.filter((id) => id !== participantId)
-        : [...prev, participantId]
-    );
-    setTeamFormError(null);
-  }
-
-  function handleProposeTeam() {
+  function handleProposeTeam(candidateId: string, compatibilityScore: number) {
     if (!me) return;
 
-    // Validate: need at least 1 other person (2 total including me)
-    if (selectedTeammates.length === 0) {
-      setTeamFormError('Select at least one teammate to form a team.');
+    // Validate: check if candidate is already on a team
+    const candidate = state.participants[candidateId];
+    if (!candidate) return;
+
+    if (candidate.teamId !== null) {
+      setTeamFormError(`${candidate.name} is already on another team. Try another candidate.`);
+      setTimeout(() => setTeamFormError(null), 3000);
       return;
     }
 
-    // Validate: check if any selected participant is already on a team
-    const alreadyOnTeam = selectedTeammates.find((id) => state.participants[id]?.teamId !== null);
-    if (alreadyOnTeam) {
-      const name = state.participants[alreadyOnTeam]?.name ?? 'Someone';
-      setTeamFormError(`${name} is already on another team. Remove them from your selection.`);
-      return;
-    }
-
-    // Create team
+    // Create 2-person team (me + candidate)
     const teamId = `t-new-${Date.now()}`;
-    const memberIds = [MY_PARTICIPANT_ID, ...selectedTeammates];
-    const memberNames = memberIds.map((id) => state.participants[id]?.name ?? 'Unknown').join(', ');
+    const memberIds = [MY_PARTICIPANT_ID, candidateId];
+    const memberNames = [me.name, candidate.name].join(' & ');
 
     const newTeam = {
       id: teamId,
-      name: `Team ${memberNames.split(', ')[0]}`, // Temp name based on first member
+      name: `Team ${me.name.split(' ')[0]}`,
       memberIds,
       projectTitle: 'Untitled Project',
-      projectDescription: 'Proposed team — ready to start building!',
+      projectDescription: 'Newly formed team — ready to start building!',
       tags: [],
       submissionId: null,
     };
@@ -92,8 +79,7 @@ export function ParticipantView() {
       },
     });
 
-    setTeamFormSuccess(`✓ Team formed with ${selectedTeammates.length + 1} members!`);
-    setSelectedTeammates([]);
+    setTeamFormSuccess(`✓ Team formed with ${candidate.name} (${compatibilityScore}% match)!`);
     setTimeout(() => setTeamFormSuccess(null), 4000);
   }
 
@@ -134,70 +120,55 @@ export function ParticipantView() {
             {topMatches.length === 0 ? (
               <p className="panel__empty">No available teammates right now. Check back soon!</p>
             ) : (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                  {topMatches.map((match) => {
-                    const participant = state.participants[match.participantId];
-                    if (!participant) return null;
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {topMatches.map((match) => {
+                  const participant = state.participants[match.participantId];
+                  if (!participant) return null;
 
-                    const isSelected = selectedTeammates.includes(participant.id);
-
-                    return (
-                      <div
-                        key={participant.id}
-                        style={{
-                          padding: '1rem',
-                          background: isSelected ? '#e3f2fd' : '#f9f9f9',
-                          border: `2px solid ${isSelected ? '#1976d2' : '#e0e0e0'}`,
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onClick={() => handleToggleTeammate(participant.id)}
-                        role="button"
-                        tabIndex={0}
-                        aria-pressed={isSelected}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <div>
-                            <strong style={{ fontSize: '1.1rem' }}>{participant.name}</strong>
-                            <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
-                              {participant.skills.join(' · ')}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: match.score >= 70 ? '#2e7d32' : match.score >= 50 ? '#f57c00' : '#666' }}>
-                              {match.score}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#999' }}>compatibility</div>
+                  return (
+                    <div
+                      key={participant.id}
+                      style={{
+                        padding: '1rem',
+                        background: '#f9f9f9',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: '1.1rem' }}>{participant.name}</strong>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
+                            {participant.skills.join(' · ')}
                           </div>
                         </div>
-                        <div style={{ fontSize: '0.9rem', color: '#555', marginTop: '0.75rem' }}>
-                          {match.reasons.map((reason, idx) => (
-                            <div key={idx} style={{ marginBottom: '0.25rem' }}>
-                              • {reason}
-                            </div>
-                          ))}
-                        </div>
-                        {isSelected && (
-                          <div style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#1976d2', fontWeight: 600 }}>
-                            ✓ Selected for team
+                        <div style={{ textAlign: 'right', marginLeft: '1rem' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: match.score >= 70 ? '#2e7d32' : match.score >= 50 ? '#f57c00' : '#666' }}>
+                            {match.score}
                           </div>
-                        )}
+                          <div style={{ fontSize: '0.75rem', color: '#999' }}>compatibility</div>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
 
-                <button
-                  className="btn btn--primary"
-                  onClick={handleProposeTeam}
-                  disabled={selectedTeammates.length === 0}
-                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
-                >
-                  Propose Team ({selectedTeammates.length + 1} members)
-                </button>
-              </>
+                      <div style={{ fontSize: '0.9rem', color: '#555', marginBottom: '1rem' }}>
+                        {match.reasons.map((reason, idx) => (
+                          <div key={idx} style={{ marginBottom: '0.25rem' }}>
+                            • {reason}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        className="btn btn--primary"
+                        onClick={() => handleProposeTeam(participant.id, match.score)}
+                        style={{ width: '100%', padding: '0.5rem' }}
+                      >
+                        Propose Team with {participant.name.split(' ')[0]}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </section>
         )}
@@ -217,22 +188,20 @@ export function ParticipantView() {
                 ))}
               </div>
 
-              {compatibility && (
-                <div className="compatibility-meter" aria-label={`Compatibility score: ${compatibility.score}%`}>
-                  <span className="compatibility-meter__label">Skill Match</span>
-                  <div className="compatibility-meter__bar-track">
-                    <div
-                      className="compatibility-meter__bar-fill"
-                      style={{ width: `${compatibility.score}%` }}
-                      role="progressbar"
-                      aria-valuenow={compatibility.score}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                    />
-                  </div>
-                  <span className="compatibility-meter__score">{compatibility.score}%</span>
+              <div className="compatibility-meter" aria-label={`Compatibility score: ${compatibilityScore}%`}>
+                <span className="compatibility-meter__label">Skill Match</span>
+                <div className="compatibility-meter__bar-track">
+                  <div
+                    className="compatibility-meter__bar-fill"
+                    style={{ width: `${compatibilityScore}%` }}
+                    role="progressbar"
+                    aria-valuenow={compatibilityScore}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
                 </div>
-              )}
+                <span className="compatibility-meter__score">{compatibilityScore}%</span>
+              </div>
 
               <div className="team-card__members">
                 <strong>Members:</strong>
