@@ -127,6 +127,25 @@ function reducer(state: EventState, action: EventAction): EventState {
       return { ...state, event: { ...state.event, phase: action.phase } };
     }
 
+    case 'CREATE_TEAM': {
+      const newTeam = action.team;
+      // Update participants to point to this team
+      const updatedParticipants = { ...state.participants };
+      for (const memberId of newTeam.memberIds) {
+        if (updatedParticipants[memberId]) {
+          updatedParticipants[memberId] = {
+            ...updatedParticipants[memberId],
+            teamId: newTeam.id,
+          };
+        }
+      }
+      return {
+        ...state,
+        teams: { ...state.teams, [newTeam.id]: newTeam },
+        participants: updatedParticipants,
+      };
+    }
+
     case 'REBUILD_LEADERBOARD': {
       return { ...state, leaderboard: buildLeaderboard(state) };
     }

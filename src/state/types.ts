@@ -134,6 +134,7 @@ export type EventAction =
   | { type: 'POST_SCORE'; submissionId: string; judgeId: string; score: number }
   | { type: 'ASSIGN_SUBMISSION_TO_JUDGE'; submissionId: string; judgeId: string }
   | { type: 'SET_PHASE'; phase: EventPhase }
+  | { type: 'CREATE_TEAM'; team: Team }
   | { type: 'REBUILD_LEADERBOARD' };
 
 export type StoreSubscriber = (state: Readonly<EventState>) => void;

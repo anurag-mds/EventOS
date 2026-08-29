@@ -34,7 +34,7 @@ export const seedEvent: HackathonEvent = {
 // ─── Participants ─────────────────────────────────────────────────────────────
 
 export const seedParticipants: Record<string, Participant> = {
-  'p-01': { id: 'p-01', name: 'Aryan Mehta',    email: 'aryan@vjti.ac.in',   teamId: 't-01', checkedIn: true,  skills: ['React', 'TypeScript', 'Gemini API'] },
+  'p-01': { id: 'p-01', name: 'Aryan Mehta',    email: 'aryan@vjti.ac.in',   teamId: null,   checkedIn: true,  skills: ['React', 'TypeScript', 'Gemini API'] },
   'p-02': { id: 'p-02', name: 'Priya Nair',     email: 'priya@vjti.ac.in',   teamId: 't-01', checkedIn: true,  skills: ['Node.js', 'GCP', 'Firebase'] },
   'p-03': { id: 'p-03', name: 'Rahul Desai',    email: 'rahul@vjti.ac.in',   teamId: 't-01', checkedIn: true,  skills: ['Python', 'FastAPI', 'BigQuery'] },
   'p-04': { id: 'p-04', name: 'Sneha Iyer',     email: 'sneha@vjti.ac.in',   teamId: 't-01', checkedIn: false, skills: ['UI/UX', 'Figma', 'CSS'] },
@@ -65,12 +65,12 @@ export const seedParticipants: Record<string, Participant> = {
   'p-29': { id: 'p-29', name: 'Riddhi Jain',    email: 'riddhi@somaiya.edu', teamId: 't-08', checkedIn: true,  skills: ['Cloud Spanner', 'AlloyDB', 'SQL'] },
   'p-30': { id: 'p-30', name: 'Farhan Sheikh',  email: 'farhan@somaiya.edu', teamId: 't-08', checkedIn: true,  skills: ['Security', 'OAuth2', 'Zero Trust'] },
   'p-31': { id: 'p-31', name: 'Lakshmi Iyer',   email: 'lakshmi@sp.edu.in',  teamId: 't-09', checkedIn: true,  skills: ['Angular', 'RxJS', 'NestJS'] },
-  'p-32': { id: 'p-32', name: 'Arjun Bose',     email: 'arjun@sp.edu.in',    teamId: 't-09', checkedIn: false, skills: ['Backend', 'Microservices', 'gRPC'] },
-  'p-33': { id: 'p-33', name: 'Swati Chopra',   email: 'swati@sp.edu.in',    teamId: 't-09', checkedIn: true,  skills: ['Elasticsearch', 'Kibana', 'Grafana'] },
+  'p-32': { id: 'p-32', name: 'Arjun Bose',     email: 'arjun@sp.edu.in',    teamId: null,   checkedIn: false, skills: ['Backend', 'Microservices', 'gRPC'] },
+  'p-33': { id: 'p-33', name: 'Swati Chopra',   email: 'swati@sp.edu.in',    teamId: null,   checkedIn: true,  skills: ['Elasticsearch', 'Kibana', 'Grafana'] },
   'p-34': { id: 'p-34', name: 'Kabir Sinha',    email: 'kabir@sp.edu.in',    teamId: 't-10', checkedIn: true,  skills: ['Unity', 'C#', 'ARCore'] },
   'p-35': { id: 'p-35', name: 'Maya Patel',     email: 'maya@sp.edu.in',     teamId: 't-10', checkedIn: true,  skills: ['Game Design', '3D Modeling', 'Blender'] },
   'p-36': { id: 'p-36', name: 'Vivek Gupta',    email: 'vivek@bvp.edu.in',   teamId: 't-11', checkedIn: true,  skills: ['Blockchain', 'Smart Contracts', 'Solana'] },
-  'p-37': { id: 'p-37', name: 'Nisha Agarwal',  email: 'nisha@bvp.edu.in',   teamId: 't-11', checkedIn: false, skills: ['Tokenomics', 'Crypto', 'DeFi'] },
+  'p-37': { id: 'p-37', name: 'Nisha Agarwal',  email: 'nisha@bvp.edu.in',   teamId: null,   checkedIn: false, skills: ['Tokenomics', 'Crypto', 'DeFi'] },
   'p-38': { id: 'p-38', name: 'Rajat Mehta',    email: 'rajat@bvp.edu.in',   teamId: 't-11', checkedIn: true,  skills: ['Web3', 'IPFS', 'NFT'] },
   'p-39': { id: 'p-39', name: 'Tina Das',       email: 'tina@sies.edu.in',   teamId: 't-12', checkedIn: true,  skills: ['Quantum', 'Qiskit', 'Python'] },
   'p-40': { id: 'p-40', name: 'Rohit Khanna',   email: 'rohit@sies.edu.in',  teamId: 't-12', checkedIn: true,  skills: ['Physics', 'Math', 'Research'] },
@@ -79,7 +79,7 @@ export const seedParticipants: Record<string, Participant> = {
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
 export const seedTeams: Record<string, Team> = {
-  't-01': { id: 't-01', name: 'NeuralNomads',    memberIds: ['p-01','p-02','p-03','p-04'], projectTitle: 'EventOS AI',          projectDescription: 'Real-time event OS powered by Gemini for anomaly detection', tags: ['AI','GCP','React'],       submissionId: 'sub-01' },
+  't-01': { id: 't-01', name: 'NeuralNomads',    memberIds: ['p-02','p-03','p-04'], projectTitle: 'EventOS AI',          projectDescription: 'Real-time event OS powered by Gemini for anomaly detection', tags: ['AI','GCP','React'],       submissionId: 'sub-01' },
   't-02': { id: 't-02', name: 'ByteBlitz',       memberIds: ['p-05','p-06','p-07','p-08'], projectTitle: 'CrowdSense',          projectDescription: 'ML-based crowd flow optimization using Vertex AI',           tags: ['ML','Vertex AI','Maps'],  submissionId: 'sub-02' },
   't-03': { id: 't-03', name: 'CloudCrafters',   memberIds: ['p-09','p-10','p-11','p-12'], projectTitle: 'SpotLight',           projectDescription: 'NLP-driven sponsor-participant matching engine',               tags: ['NLP','Firebase','GKE'],   submissionId: 'sub-03' },
   't-04': { id: 't-04', name: 'PixelPioneers',   memberIds: ['p-13','p-14','p-15','p-16'], projectTitle: 'JudgeAssist',         projectDescription: 'AutoML submission scoring assistant for judges',              tags: ['AutoML','Flutter','ML'],  submissionId: 'sub-04' },
@@ -87,9 +87,9 @@ export const seedTeams: Record<string, Team> = {
   't-06': { id: 't-06', name: 'KernelKrew',      memberIds: ['p-21','p-22','p-23'],        projectTitle: 'SecureHack',          projectDescription: 'Zero-trust DevSecOps pipeline for hackathon infra',           tags: ['Security','K8s','DevOps'],submissionId: 'sub-06' },
   't-07': { id: 't-07', name: 'DataDrifters',    memberIds: ['p-24','p-25','p-26','p-27'], projectTitle: 'InsightBoard',        projectDescription: 'Real-time analytics dashboard powered by Looker + BigQuery',  tags: ['Data','Looker','IoT'],    submissionId: 'sub-07' },
   't-08': { id: 't-08', name: 'AlphaBuilders',   memberIds: ['p-28','p-29','p-30'],        projectTitle: 'VaultDB',             projectDescription: 'Encrypted multi-tenant Spanner schema with AlloyDB failover', tags: ['Security','SQL','Next.js'],submissionId: 'sub-08' },
-  't-09': { id: 't-09', name: 'CodeCatalysts',   memberIds: ['p-31','p-32','p-33'],        projectTitle: 'LogLens',             projectDescription: 'Distributed tracing & log aggregation with Elasticsearch',    tags: ['DevOps','Backend','Observability'], submissionId: null },
+  't-09': { id: 't-09', name: 'CodeCatalysts',   memberIds: ['p-31'],                  projectTitle: 'LogLens',             projectDescription: 'Distributed tracing & log aggregation with Elasticsearch',    tags: ['DevOps','Backend','Observability'], submissionId: null },
   't-10': { id: 't-10', name: 'MetaMinds',       memberIds: ['p-34','p-35'],               projectTitle: 'ARena',               projectDescription: 'AR-powered venue navigation using ARCore',                    tags: ['AR','Unity','Mobile'],    submissionId: null },
-  't-11': { id: 't-11', name: 'ChainChangers',   memberIds: ['p-36','p-37','p-38'],        projectTitle: 'DAppDao',             projectDescription: 'Decentralized governance platform for hackathon voting',      tags: ['Blockchain','DeFi','Web3'], submissionId: null },
+  't-11': { id: 't-11', name: 'ChainChangers',   memberIds: ['p-36','p-38'],           projectTitle: 'DAppDao',             projectDescription: 'Decentralized governance platform for hackathon voting',      tags: ['Blockchain','DeFi','Web3'], submissionId: null },
   't-12': { id: 't-12', name: 'QuantumQuest',    memberIds: ['p-39','p-40'],               projectTitle: 'QuantSim',            projectDescription: 'Quantum algorithm simulator for optimization problems',       tags: ['Quantum','Research','Python'], submissionId: null },
 };
 
