@@ -7,6 +7,7 @@ import { judgeOverload } from '../../intelligence/judgeOverload';
 import { ActivityFeed } from '../../components/ActivityFeed';
 
 const MY_JUDGE_ID = 'j-01';
+const JUDGE = { role: 'judge' as const };
 
 export function JudgeView() {
   const [state, setState] = useState<Readonly<EventState>>(EventStore.getState());
@@ -30,7 +31,10 @@ export function JudgeView() {
     const score = parseInt(raw, 10);
     if (isNaN(score) || score < 0 || score > 100) return;
 
-    EventStore.dispatch({ type: 'POST_SCORE', submissionId, judgeId: MY_JUDGE_ID, score });
+    EventStore.dispatch(
+      { type: 'POST_SCORE', submissionId, judgeId: MY_JUDGE_ID, score },
+      JUDGE
+    );
     EventStore.dispatch({
       type: 'ADD_ACTIVITY',
       entry: {
@@ -41,7 +45,7 @@ export function JudgeView() {
         teamId: state.submissions[submissionId]?.teamId ?? null,
         actorName: me?.name ?? 'Judge',
       },
-    });
+    }, JUDGE);
     setScoreDraft((prev) => {
       const next = { ...prev };
       delete next[submissionId];
@@ -53,28 +57,32 @@ export function JudgeView() {
     <main className="view judge-view" aria-label="Judge Panel">
       <header className="view__header">
         <div>
-          <h1 className="view__title">Judge Panel</h1>
-          <p className="view__subtitle">{me?.name ?? 'Judge'} · {state.event.name}</p>
+          <p className="view__eyebrow">Judging</p>
+          <h1 className="view__title">{me?.name ?? 'Judge'}</h1>
+          <p className="view__subtitle">{state.event.name} · {mySubmissions.length} in queue</p>
         </div>
         {amOverloaded && (
           <div className="overload-banner" role="alert" aria-live="assertive">
             <AlertTriangle className="overload-banner__icon" aria-hidden="true" />
-            Over capacity — {overload.overloadBy[MY_JUDGE_ID]} extra submissions assigned
+            {overload.overloadBy[MY_JUDGE_ID]} over capacity
           </div>
         )}
       </header>
 
       <div className="view__body">
         <section className="panel panel--wide" aria-labelledby="queue-heading">
-          <h2 id="queue-heading" className="panel__title">
-            My Submission Queue
-            <span className="panel__badge">{mySubmissions.length}</span>
-          </h2>
+          <div className="panel__head">
+            <h2 id="queue-heading" className="panel__title">
+              Queue
+              <span className="panel__badge">{mySubmissions.length}</span>
+            </h2>
+          </div>
+          <div className="panel__body" style={{ padding: mySubmissions.length === 0 ? undefined : 0 }}>
 
           {mySubmissions.length === 0 && (
             <div className="empty-state" role="status">
               <ClipboardList className="empty-state__icon" aria-hidden="true" />
-              <p>No submissions assigned yet.</p>
+              <p>No submissions assigned.</p>
             </div>
           )}
 
@@ -88,17 +96,17 @@ export function JudgeView() {
                 <div className="submission-card__header">
                   <h3 className="submission-card__title">{sub.title}</h3>
                   <span className={`submission-card__status submission-card__status--${sub.status}`}>
-                    {sub.status.replace('_', ' ').toUpperCase()}
+                    {sub.status.replace('_', ' ')}
                   </span>
                 </div>
 
-                <p className="submission-card__team">by {team?.name ?? sub.teamId}</p>
+                <p className="submission-card__team">{team?.name ?? sub.teamId}</p>
                 <p className="submission-card__desc">{sub.description}</p>
 
                 <div className="submission-card__links">
                   <a href={sub.repoUrl} target="_blank" rel="noopener noreferrer" className="link">
                     <FolderOpen className="link__icon" aria-hidden="true" />
-                    Repository
+                    Repo
                   </a>
                   <a href={sub.demoUrl} target="_blank" rel="noopener noreferrer" className="link">
                     <ExternalLink className="link__icon" aria-hidden="true" />
@@ -110,12 +118,12 @@ export function JudgeView() {
                   {alreadyScored ? (
                     <div className="scoring-done" aria-label={`You scored ${myScore}/100`}>
                       <CheckCircle className="scoring-done__icon" aria-hidden="true" />
-                      <span>Your score: <strong>{myScore}/100</strong></span>
+                      <span>Scored <strong>{myScore}/100</strong></span>
                     </div>
                   ) : (
                     <div className="scoring-form">
                       <label htmlFor={`score-${sub.id}`} className="scoring-form__label">
-                        Your Score (0–100)
+                        Score
                       </label>
                       <input
                         id={`score-${sub.id}`}
@@ -128,6 +136,7 @@ export function JudgeView() {
                           setScoreDraft((prev) => ({ ...prev, [sub.id]: e.target.value }))
                         }
                         aria-label={`Score for ${sub.title}`}
+                        placeholder="0–100"
                       />
                       <button
                         className="btn btn--primary btn--sm"
@@ -135,7 +144,7 @@ export function JudgeView() {
                         disabled={!scoreDraft[sub.id]}
                         aria-label={`Submit score for ${sub.title}`}
                       >
-                        Submit Score
+                        Submit
                       </button>
                     </div>
                   )}
@@ -143,23 +152,32 @@ export function JudgeView() {
               </article>
             );
           })}
+          </div>
         </section>
 
         <section className="panel" aria-labelledby="expertise-heading">
-          <h2 id="expertise-heading" className="panel__title">My Expertise</h2>
+          <div className="panel__head">
+            <h2 id="expertise-heading" className="panel__title">Expertise</h2>
+          </div>
+          <div className="panel__body">
           <div className="tag-list">
             {(me?.expertise ?? []).map((e) => (
               <span key={e} className="tag">{e}</span>
             ))}
           </div>
+          </div>
         </section>
 
         <section className="panel" aria-labelledby="jfeed-heading">
-          <h2 id="jfeed-heading" className="panel__title">Score Events</h2>
+          <div className="panel__head">
+            <h2 id="jfeed-heading" className="panel__title">Score log</h2>
+          </div>
+          <div className="panel__body">
           <ActivityFeed
             entries={state.activityFeed.filter((a) => a.kind === 'score_posted')}
             maxItems={20}
           />
+          </div>
         </section>
       </div>
     </main>

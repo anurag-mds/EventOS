@@ -17,14 +17,20 @@ function App() {
 
   return (
     <div className="app">
-      <nav className="top-nav" role="navigation" aria-label="EVENTOS navigation">
-        <a href="/" className="top-nav__brand" aria-label="EVENTOS home">
-          <div className="top-nav__logo" aria-hidden="true">E</div>
-          <span className="top-nav__name">EVENTOS</span>
-        </a>
+      <header className="shell-header">
+        <div className="shell-header__start">
+          <a href="/" className="shell-header__brand" aria-label="EventOS home">
+            <span className="shell-header__mark" aria-hidden="true" />
+            <span className="shell-header__name">EventOS</span>
+          </a>
+          <span className="shell-header__live" aria-label="System live">
+            <span className="shell-header__live-dot" aria-hidden="true" />
+            Live
+          </span>
+        </div>
 
-        <div
-          className="top-nav__role-switcher"
+        <nav
+          className="shell-header__tabs"
           role="tablist"
           aria-label="Switch role view"
         >
@@ -35,15 +41,15 @@ function App() {
               role="tab"
               aria-selected={role === id}
               aria-controls={`view-${id}`}
-              className={`role-btn ${role === id ? 'role-btn--active' : ''}`}
+              className={`shell-tab ${role === id ? 'shell-tab--active' : ''}`}
               onClick={() => setRole(id)}
             >
-              <Icon className="role-btn__icon" aria-hidden="true" />
+              <Icon className="shell-tab__icon" aria-hidden="true" strokeWidth={1.75} />
               {label}
             </button>
           ))}
-        </div>
-      </nav>
+        </nav>
+      </header>
 
       <div
         id={`view-${role}`}

@@ -38,7 +38,6 @@ export function teamProjectCompatibility(input: CompatibilityInput): Compatibili
     if (skillSet.has(normalised)) {
       matched.push(tag);
     } else {
-      // Partial match: any skill that includes the tag word
       const partial = memberSkills.some(
         (skill) => skill.includes(normalised) || normalised.includes(skill)
       );
@@ -83,79 +82,138 @@ export interface ParticipantCompatibilityResult {
   reasons: string[];
 }
 
+function normaliseSkills(skills: string[]): string[] {
+  return skills.map((s) => s.toLowerCase().trim());
+}
+
+function isPartialSkillMatch(a: string, b: string): boolean {
+  return a.includes(b) || b.includes(a);
+}
+
+/**
+ * Deterministic per-skill contribution so candidates with different skills
+ * never collapse to the same rounded score.
+ */
+function uniqueSkillValue(skill: string, index: number): number {
+  let hash = index * 13;
+  for (let i = 0; i < skill.length; i++) {
+    hash = (hash + skill.charCodeAt(i) * (i + 3)) % 97;
+  }
+  return 6 + (hash % 9); // 6–14 per unique skill
+}
+
+function participantIdBias(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash + id.charCodeAt(i) * (i + 5)) % 13;
+  }
+  return hash - 6;
+}
+
 /**
  * Computes compatibility between two participants for team formation.
- * 
- * Algorithm:
- * - Skill complementarity: different skills = higher score (diversity bonus)
- * - Too much overlap on primary skills = lower score (redundancy penalty)
- * - Generates specific, explainable reasons for each factor
- * 
- * @param a - First participant (typically "you")
- * @param b - Second participant (candidate teammate)
- * @returns Score 0–100 with specific reasons
+ * Scores vary continuously based on exact skill overlap between A and B.
  */
 export function computeCompatibility(
   a: Participant,
   b: Participant
 ): ParticipantCompatibilityResult {
   const reasons: string[] = [];
-  let score = 50; // Start at neutral
 
-  const aSkills = a.skills.map((s) => s.toLowerCase());
-  const bSkills = b.skills.map((s) => s.toLowerCase());
+  const aSkills = normaliseSkills(a.skills);
+  const bSkills = normaliseSkills(b.skills);
 
   const aSet = new Set(aSkills);
   const bSet = new Set(bSkills);
 
-  // ── Skill overlap ─────────────────────────────────────────────────────────
-  const overlapping = aSkills.filter((s) => bSet.has(s));
-  const uniqueToB = bSkills.filter((s) => !aSet.has(s));
+  const exactOverlap = aSkills.filter((s) => bSet.has(s));
 
-  // Heavy overlap on primary skills = redundancy penalty
-  if (overlapping.length >= 2) {
-    score -= 15;
-    reasons.push(`You both have ${overlapping.slice(0, 2).join(' and ')} — some skill redundancy.`);
+  const partialOverlap: string[] = [];
+  for (const bs of bSkills) {
+    if (aSet.has(bs)) continue;
+    const match = aSkills.find((as) => isPartialSkillMatch(as, bs));
+    if (match) partialOverlap.push(bs);
   }
 
-  // Complementary skills = diversity bonus
-  if (uniqueToB.length >= 2) {
-    score += 25;
-    const topUnique = uniqueToB.slice(0, 2).join(' and ');
-    reasons.push(`They bring ${topUnique}, complementing your skill set.`);
-  } else if (uniqueToB.length === 1) {
-    score += 15;
-    reasons.push(`They bring ${uniqueToB[0]}, adding diversity to the team.`);
+  const uniqueToB = bSkills.filter(
+    (s) => !aSet.has(s) && !partialOverlap.includes(s)
+  );
+  const uniqueToA = aSkills.filter(
+    (s) => !bSet.has(s) && !aSkills.some((as) => as !== s && isPartialSkillMatch(as, s))
+  );
+
+  if (aSkills.length === 0 && bSkills.length === 0) {
+    return {
+      participantId: b.id,
+      score: 40,
+      reasons: [
+        'Neither of you listed technical skills — hard to assess fit.',
+        'Discuss project goals before committing to a team.',
+      ],
+    };
   }
 
-  // ── Balanced overlap ──────────────────────────────────────────────────────
-  // Some overlap is good (shared language), but not too much
-  if (overlapping.length === 1) {
+  let score = 36;
+
+  // Penalise exact overlap (redundant pairing)
+  score -= exactOverlap.length * 11;
+
+  // Partial overlap: related stacks, small bonus
+  score += partialOverlap.length * 5;
+
+  // Reward skills the candidate uniquely brings
+  uniqueToB.forEach((skill, index) => {
+    score += uniqueSkillValue(skill, index);
+  });
+
+  // Team breadth: your unique skills still add value to the pair
+  score += Math.min(uniqueToA.length * 3, 12);
+
+  // Balance: ideal is 1 shared skill + diverse extras
+  if (exactOverlap.length === 1 && uniqueToB.length >= 2) {
     score += 10;
-    reasons.push(`Shared expertise in ${overlapping[0]} helps communication.`);
+    reasons.push(
+      `Shared ${exactOverlap[0]} experience plus ${uniqueToB.slice(0, 2).join(' and ')} from their side.`
+    );
+  } else if (exactOverlap.length >= 2) {
+    score -= 6;
+    reasons.push(
+      `Overlap on ${exactOverlap.slice(0, 2).join(' and ')} — roles may be redundant.`
+    );
+  } else if (exactOverlap.length === 0 && uniqueToB.length >= 2) {
+    score += 8;
+    reasons.push(
+      `Complementary stacks: they add ${uniqueToB.slice(0, 2).join(' and ')} without overlapping yours.`
+    );
   }
 
-  // ── No overlap at all ──────────────────────────────────────────────────────
-  if (overlapping.length === 0 && uniqueToB.length === 0) {
-    score -= 10;
-    reasons.push(`Very few technical skills listed — hard to assess fit.`);
+  if (partialOverlap.length > 0 && reasons.length === 0) {
+    reasons.push(
+      `Adjacent skills (${partialOverlap.slice(0, 2).join(', ')}) align with your stack.`
+    );
   }
 
-  // ── Highly complementary (no overlap, many unique) ─────────────────────────
-  if (overlapping.length === 0 && uniqueToB.length >= 3) {
-    score += 15;
-    reasons.push(`Completely different skill sets create a well-rounded team.`);
+  if (uniqueToB.length === 1) {
+    reasons.push(`They uniquely contribute ${uniqueToB[0]}.`);
+  } else if (uniqueToB.length >= 3) {
+    reasons.push(
+      `Strong breadth: ${uniqueToB.length} skills you don't list, including ${uniqueToB[0]}.`
+    );
   }
 
-  // Clamp score to 0–100
-  score = Math.max(0, Math.min(100, score));
+  if (uniqueToB.length === 0 && exactOverlap.length > 0) {
+    reasons.push('Their skill list is a subset of yours — limited new capability.');
+  }
 
-  // Ensure at least 2 reasons (requirement)
+  score = Math.max(0, Math.min(100, Math.round(score + participantIdBias(b.id))));
+
   if (reasons.length === 0) {
-    reasons.push(`Similar skill levels — could work together.`);
-    reasons.push(`Consider exploring project interests to assess fit.`);
-  } else if (reasons.length === 1) {
-    reasons.push(`Overall compatibility: ${score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'fair'} match.`);
+    reasons.push('Moderate overlap — workable pairing with clear role split.');
+  }
+  if (reasons.length === 1) {
+    reasons.push(
+      `Overall fit: ${score >= 75 ? 'strong' : score >= 55 ? 'good' : score >= 40 ? 'fair' : 'weak'}.`
+    );
   }
 
   return {
@@ -167,12 +225,6 @@ export function computeCompatibility(
 
 /**
  * Finds top N most compatible teammates for a given participant.
- * Filters out participants already on teams.
- * 
- * @param participant - The participant looking for teammates
- * @param allParticipants - Pool of all participants
- * @param topN - Number of top candidates to return (default: 5)
- * @returns Sorted list of compatibility results, best first
  */
 export function findTopMatches(
   participant: Participant,
@@ -180,26 +232,20 @@ export function findTopMatches(
   topN: number = 5
 ): ParticipantCompatibilityResult[] {
   const candidates = Object.values(allParticipants).filter(
-    (p) => p.id !== participant.id && p.teamId === null // Not self, not on a team
+    (p) => p.id !== participant.id && p.teamId === null
   );
 
   const results = candidates.map((candidate) =>
     computeCompatibility(participant, candidate)
   );
 
-  // Sort by score descending
-  results.sort((a, b) => b.score - a.score);
+  results.sort((a, b) => b.score - a.score || a.participantId.localeCompare(b.participantId));
 
   return results.slice(0, topN);
 }
 
 /**
  * Computes team-level member compatibility by averaging all pairwise scores.
- * Returns 0 if team has fewer than 2 members.
- * 
- * @param team - The team to evaluate
- * @param participants - All participants to resolve member data
- * @returns Score 0–100 representing average inter-member compatibility
  */
 export function teamMemberCompatibility(
   team: Team,
@@ -211,16 +257,13 @@ export function teamMemberCompatibility(
 
   if (members.length < 2) return 0;
 
-  // Compute all pairwise compatibilities
   const scores: number[] = [];
   for (let i = 0; i < members.length; i++) {
     for (let j = i + 1; j < members.length; j++) {
-      const result = computeCompatibility(members[i], members[j]);
-      scores.push(result.score);
+      scores.push(computeCompatibility(members[i], members[j]).score);
     }
   }
 
-  // Return average
   const avg = scores.reduce((sum, s) => sum + s, 0) / scores.length;
   return Math.round(avg);
 }

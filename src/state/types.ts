@@ -8,6 +8,19 @@ export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export type IncidentStatus = 'open' | 'acknowledged' | 'resolved';
 
+export type IncidentKind = 'general' | 'judge_overload';
+
+export interface JudgeOverloadRecommendation {
+  overloadedJudgeId: string;
+  overloadedJudgeName: string;
+  targetJudgeId: string;
+  targetJudgeName: string;
+  submissionIdsToMove: string[];
+  pendingCount: number;
+  averagePending: number;
+  overloadRatio: number;
+}
+
 export type SubmissionStatus = 'pending' | 'under_review' | 'scored' | 'disqualified';
 
 export type EventPhase =
@@ -70,6 +83,7 @@ export interface Submission {
 
 export interface Incident {
   id: string;
+  kind?: IncidentKind;
   title: string;
   description: string;
   severity: IncidentSeverity;
@@ -77,6 +91,7 @@ export interface Incident {
   reportedAt: number; // Unix ms
   resolvedAt: number | null;
   affectedTeamIds: string[];
+  recommendation?: JudgeOverloadRecommendation;
 }
 
 export interface ActivityEntry {
@@ -130,11 +145,14 @@ export type EventAction =
   | { type: 'ADD_ACTIVITY'; entry: ActivityEntry }
   | { type: 'OPEN_INCIDENT'; incident: Incident }
   | { type: 'RESOLVE_INCIDENT'; incidentId: string; resolvedAt: number }
+  | { type: 'APPLY_JUDGE_OVERLOAD'; incidentId: string }
   | { type: 'SUBMIT_PROJECT'; submission: Submission; teamId: string }
   | { type: 'POST_SCORE'; submissionId: string; judgeId: string; score: number }
   | { type: 'ASSIGN_SUBMISSION_TO_JUDGE'; submissionId: string; judgeId: string }
+  | { type: 'REASSIGN_SUBMISSION'; submissionId: string; fromJudgeId: string; toJudgeId: string }
   | { type: 'SET_PHASE'; phase: EventPhase }
   | { type: 'CREATE_TEAM'; team: Team }
-  | { type: 'REBUILD_LEADERBOARD' };
+  | { type: 'REBUILD_LEADERBOARD' }
+  | { type: 'RESET_STATE' };
 
 export type StoreSubscriber = (state: Readonly<EventState>) => void;

@@ -3,8 +3,8 @@ import type { Incident, IncidentSeverity } from '../state/types';
 
 interface IncidentCardProps {
   incident: Incident;
-  onAcknowledge?: (id: string) => void;
-  onResolve?: (id: string) => void;
+  canApply?: boolean;
+  onApplyRecommendation?: (id: string) => void;
 }
 
 const SEVERITY_LABEL: Record<IncidentSeverity, string> = {
@@ -18,7 +18,15 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function IncidentCard({ incident, onAcknowledge, onResolve }: IncidentCardProps) {
+export function IncidentCard({
+  incident,
+  canApply = false,
+  onApplyRecommendation,
+}: IncidentCardProps) {
+  const isJudgeOverload = incident.kind === 'judge_overload';
+  const rec = incident.recommendation;
+  const isResolved = incident.status === 'resolved';
+
   return (
     <article
       className={`incident-card incident-card--${incident.severity} incident-card--${incident.status}`}
@@ -39,28 +47,48 @@ export function IncidentCard({ incident, onAcknowledge, onResolve }: IncidentCar
 
       <p className="incident-card__desc">{incident.description}</p>
 
+      {isJudgeOverload && rec && (
+        <dl className="incident-card__metrics">
+          <div className="incident-card__metric">
+            <dt>Pending load</dt>
+            <dd>{rec.pendingCount} evaluations</dd>
+          </div>
+          <div className="incident-card__metric">
+            <dt>Average</dt>
+            <dd>{rec.averagePending}</dd>
+          </div>
+          <div className="incident-card__metric">
+            <dt>Overload</dt>
+            <dd>{rec.overloadRatio.toFixed(1)}× average</dd>
+          </div>
+        </dl>
+      )}
+
+      {isJudgeOverload && rec && !isResolved && (
+        <p className="incident-card__recommendation">
+          Move {rec.submissionIdsToMove.length} submission(s) from{' '}
+          <strong>{rec.overloadedJudgeName}</strong> to{' '}
+          <strong>{rec.targetJudgeName}</strong>.
+        </p>
+      )}
+
       <footer className="incident-card__footer">
         <time className="incident-card__time" dateTime={new Date(incident.reportedAt).toISOString()}>
           Reported {formatTime(incident.reportedAt)}
+          {incident.resolvedAt && (
+            <> · Resolved {formatTime(incident.resolvedAt)}</>
+          )}
         </time>
 
         <div className="incident-card__actions">
-          {incident.status === 'open' && onAcknowledge && (
-            <button
-              className="btn btn--sm btn--ghost"
-              onClick={() => onAcknowledge(incident.id)}
-              aria-label={`Acknowledge incident: ${incident.title}`}
-            >
-              Acknowledge
-            </button>
-          )}
-          {incident.status !== 'resolved' && onResolve && (
+          {isJudgeOverload && onApplyRecommendation && (
             <button
               className="btn btn--sm btn--primary"
-              onClick={() => onResolve(incident.id)}
-              aria-label={`Resolve incident: ${incident.title}`}
+              onClick={() => onApplyRecommendation(incident.id)}
+              disabled={isResolved || !canApply}
+              aria-label={`Apply recommendation for ${incident.title}`}
             >
-              Resolve
+              {isResolved ? 'Applied' : 'Apply Recommendation'}
             </button>
           )}
         </div>

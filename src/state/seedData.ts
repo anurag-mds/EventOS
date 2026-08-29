@@ -132,6 +132,18 @@ export const seedJudges: Record<string, Judge> = {
     assignedSubmissionIds: ['sub-06', 'sub-07', 'sub-08'],
     capacityLimit: 3,
   },
+  'j-07': {
+    id: 'j-07', name: 'Dr. Neha Iyer',
+    expertise: ['UX Research', 'Accessibility', 'Design Systems', 'Testing'],
+    assignedSubmissionIds: [],
+    capacityLimit: 3,
+  },
+  'j-08': {
+    id: 'j-08', name: 'Mr. Vikram Joshi',
+    expertise: ['AI Safety', 'Prompt Engineering', 'APIs', 'Integrations'],
+    assignedSubmissionIds: [],
+    capacityLimit: 3,
+  },
 };
 
 // ─── Submissions ──────────────────────────────────────────────────────────────

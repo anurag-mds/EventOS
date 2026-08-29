@@ -1,5 +1,5 @@
 // ─── Participant View ────────────────────────────────────────────────────────
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Check, AlertTriangle, Users } from 'lucide-react';
 import { EventStore } from '../../state/eventStore';
 import type { EventState } from '../../state/types';
@@ -8,6 +8,7 @@ import { ActivityFeed } from '../../components/ActivityFeed';
 import { teamMemberCompatibility, findTopMatches } from '../../intelligence/compatibility';
 
 const MY_PARTICIPANT_ID = 'p-01';
+const PARTICIPANT = { role: 'participant' as const };
 
 function scoreClass(score: number): string {
   if (score >= 70) return 'candidate-card__score--high';
@@ -38,7 +39,10 @@ export function ParticipantView() {
   const minutesLeft = Math.floor(timeLeft / 60_000);
   const secondsLeft = Math.floor((timeLeft % 60_000) / 1000);
 
-  const topMatches = me && !myTeam ? findTopMatches(me, state.participants, 5) : [];
+  const topMatches = useMemo(
+    () => (me && !myTeam ? findTopMatches(me, state.participants, 5) : []),
+    [me, myTeam, state.participants]
+  );
 
   function handleProposeTeam(candidateId: string, matchScore: number) {
     if (!me) return;
@@ -71,7 +75,7 @@ export function ParticipantView() {
       submissionId: null,
     };
 
-    EventStore.dispatch({ type: 'CREATE_TEAM', team: newTeam });
+    EventStore.dispatch({ type: 'CREATE_TEAM', team: newTeam }, PARTICIPANT);
 
     EventStore.dispatch({
       type: 'ADD_ACTIVITY',
@@ -83,7 +87,7 @@ export function ParticipantView() {
         teamId,
         actorName: me.name,
       },
-    });
+    }, PARTICIPANT);
 
     setTeamFormSuccess(`Team formed with ${candidate.name} (${matchScore}% match)`);
     setTimeout(() => setTeamFormSuccess(null), 4000);
@@ -93,21 +97,25 @@ export function ParticipantView() {
     <main className="view participant-view" aria-label="Participant View">
       <header className="view__header">
         <div>
-          <h1 className="view__title">Participant Portal</h1>
-          <p className="view__subtitle">{me?.name ?? 'Participant'} · {state.event.name}</p>
+          <p className="view__eyebrow">Participant</p>
+          <h1 className="view__title">{me?.name ?? 'Participant'}</h1>
+          <p className="view__subtitle">{state.event.name}</p>
         </div>
         <div className="countdown" aria-label={`Time remaining: ${minutesLeft} minutes ${secondsLeft} seconds`}>
           <span className="countdown__value">{String(minutesLeft).padStart(2, '0')}:{String(secondsLeft).padStart(2, '0')}</span>
-          <span className="countdown__label">remaining</span>
+          <span className="countdown__label">time left</span>
         </div>
       </header>
 
       <div className="view__body">
         {!myTeam && me && (
           <section className="panel panel--wide" aria-labelledby="matchmaking-heading">
-            <h2 id="matchmaking-heading" className="panel__title">Find Your Team</h2>
+            <div className="panel__head">
+              <h2 id="matchmaking-heading" className="panel__title">Team match</h2>
+            </div>
+            <div className="panel__body">
             <p className="section-intro">
-              Top {topMatches.length} compatible teammates based on your skills: {me.skills.join(', ')}
+              {topMatches.length} candidates ranked by skill overlap — {me.skills.join(', ')}
             </p>
 
             {teamFormSuccess && (
@@ -130,7 +138,7 @@ export function ParticipantView() {
                 <p>No available teammates right now. Check back soon.</p>
               </div>
             ) : (
-              <div className="panel__list">
+              <div className="data-list">
                 {topMatches.map((match) => {
                   const participant = state.participants[match.participantId];
                   if (!participant) return null;
@@ -146,9 +154,9 @@ export function ParticipantView() {
                         </div>
                         <div className="candidate-card__score-block">
                           <div className={`candidate-card__score ${scoreClass(match.score)}`}>
-                            {match.score}
+                            {match.score}%
                           </div>
-                          <div className="candidate-card__score-label">compatibility</div>
+                          <div className="candidate-card__score-label">match</div>
                         </div>
                       </div>
 
@@ -164,19 +172,23 @@ export function ParticipantView() {
                         className="btn btn--primary btn--block"
                         onClick={() => handleProposeTeam(participant.id, match.score)}
                       >
-                        Propose Team with {participant.name.split(' ')[0]}
+                        Invite {participant.name.split(' ')[0]}
                       </button>
                     </div>
                   );
                 })}
               </div>
             )}
+            </div>
           </section>
         )}
 
         {myTeam && (
           <section className="panel" aria-labelledby="team-heading">
-            <h2 id="team-heading" className="panel__title">My Team</h2>
+            <div className="panel__head">
+              <h2 id="team-heading" className="panel__title">Team</h2>
+            </div>
+            <div className="panel__body">
             <div className="team-card">
               <h3 className="team-card__name">{myTeam.name}</h3>
               <p className="team-card__project">{myTeam.projectTitle}</p>
@@ -216,11 +228,15 @@ export function ParticipantView() {
                 })}
               </div>
             </div>
+            </div>
           </section>
         )}
 
         <section className="panel" aria-labelledby="submission-heading">
-          <h2 id="submission-heading" className="panel__title">Submission</h2>
+          <div className="panel__head">
+            <h2 id="submission-heading" className="panel__title">Submission</h2>
+          </div>
+          <div className="panel__body">
           {mySubmission ? (
             <div className={`submission-status submission-status--${mySubmission.status}`}>
               <div className="submission-status__row">
@@ -243,18 +259,27 @@ export function ParticipantView() {
               </div>
             </div>
           ) : (
-            <p className="panel__empty">No submission yet. Submit before time runs out.</p>
+            <p className="panel__empty">No submission yet.</p>
           )}
+          </div>
         </section>
 
         <section className="panel panel--wide" aria-labelledby="lb-heading">
-          <h2 id="lb-heading" className="panel__title">Live Leaderboard</h2>
+          <div className="panel__head">
+            <h2 id="lb-heading" className="panel__title">Leaderboard</h2>
+          </div>
+          <div className="panel__body" style={{ padding: 0 }}>
           <Leaderboard entries={state.leaderboard} />
+          </div>
         </section>
 
         <section className="panel" aria-labelledby="pfeed-heading">
-          <h2 id="pfeed-heading" className="panel__title">Event Feed</h2>
+          <div className="panel__head">
+            <h2 id="pfeed-heading" className="panel__title">Activity</h2>
+          </div>
+          <div className="panel__body">
           <ActivityFeed entries={state.activityFeed} maxItems={20} />
+          </div>
         </section>
       </div>
     </main>
