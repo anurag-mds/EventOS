@@ -38,6 +38,7 @@ export function OrganizerView() {
     submissions,
     incidents: state.incidents,
     participants,
+    judges,
   });
 
   const overload = judgeOverload(judges);
